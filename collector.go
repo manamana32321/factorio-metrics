@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorcon/rcon"
 	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
 // FactorioStats represents the JSON output from the Lua collection script.
@@ -52,7 +53,7 @@ type Collector struct {
 	entityBuilt      metric.Float64Gauge
 }
 
-func NewCollector(host, port, password, luaScript string, mp *metric.MeterProvider) (*Collector, error) {
+func NewCollector(host, port, password, luaScript string, mp *sdkmetric.MeterProvider) (*Collector, error) {
 	meter := mp.Meter("factorio")
 	c := &Collector{
 		addr:     fmt.Sprintf("%s:%s", host, port),
