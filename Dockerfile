@@ -3,7 +3,7 @@ WORKDIR /app
 COPY go.mod ./
 COPY *.go ./
 COPY lua/ ./lua/
-RUN go mod tidy && go mod download
+RUN go mod tidy -e
 RUN CGO_ENABLED=0 go build -o /factorio-metrics .
 
 FROM scratch
