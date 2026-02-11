@@ -21,4 +21,4 @@ if poles[1] then
   r.power_production=en.input_counts
   r.power_consumption=en.output_counts
 end
-rcon.print(game.table_to_json(r))
+rcon.print(helpers.table_to_json(r))
