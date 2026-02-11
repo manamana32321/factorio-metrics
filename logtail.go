@@ -30,6 +30,7 @@ type LogTailer struct {
 	namespace string
 	podLabel  string
 	logger    otellog.Logger
+	lastPod   string // suppress repeated "tailing logs" messages
 }
 
 func NewLogTailer(namespace, podLabel string, logger otellog.Logger) *LogTailer {
@@ -46,12 +47,13 @@ func (t *LogTailer) Run(ctx context.Context) {
 			if ctx.Err() != nil {
 				return
 			}
-			log.Printf("log tail error: %v, retrying in 5s", err)
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(5 * time.Second):
-			}
+			log.Printf("log tail error: %v, retrying in 10s", err)
+		}
+		// Always wait before reconnecting (prevents tight loop on EOF)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(10 * time.Second):
 		}
 	}
 }
@@ -62,7 +64,10 @@ func (t *LogTailer) tail(ctx context.Context) error {
 		return fmt.Errorf("find pod: %w", err)
 	}
 
-	log.Printf("tailing logs from pod %s/%s", t.namespace, podName)
+	if t.lastPod != podName {
+		log.Printf("tailing logs from pod %s/%s", t.namespace, podName)
+		t.lastPod = podName
+	}
 
 	body, err := t.streamLogs(ctx, podName)
 	if err != nil {
@@ -190,7 +195,7 @@ func (t *LogTailer) streamLogs(ctx context.Context, podName string) (io.ReadClos
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log?follow=true&tailLines=0&timestamps=false",
+	url := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log?follow=true&sinceSeconds=10&timestamps=false",
 		t.apiBase(), t.namespace, podName)
 
 	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
