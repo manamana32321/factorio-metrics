@@ -1,7 +1,7 @@
 local f=game.forces["player"] local s=game.surfaces[1] local r={}
 r.tick=game.tick
 r.players=#game.connected_players
-r.evolution=game.forces["enemy"].evolution_factor
+r.evolution=game.forces["enemy"].get_evolution_factor(s)
 r.item_production=f.item_production_statistics.input_counts
 r.item_consumption=f.item_production_statistics.output_counts
 r.fluid_production=f.fluid_production_statistics.input_counts
